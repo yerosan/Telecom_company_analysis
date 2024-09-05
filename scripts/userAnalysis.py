@@ -8,6 +8,8 @@ import seaborn as sns
 
 from sklearn.cluster import KMeans
 
+from scipy.stats import zscore
+
 # db=DataBaseConnection()
 
 class UserAnalysis:
@@ -27,12 +29,60 @@ class UserAnalysis:
         finally:
             db.close_connection(connection)
 
+
+    def top_10_handset(self, df):
+        top_10_handsets = df['Handset Type'].value_counts().head(10)
+        print ("top_10_handsets", top_10_handsets)
+        return top_10_handsets
+    
+    def top_3_manufacturers(self, df):
+        top_3_manufacturers = df['Handset Manufacturer'].value_counts().head(3)
+        print("top_3_manufacturers",top_3_manufacturers)
+        
+        return top_3_manufacturers
+    
+    def top_5HandsetPer_top3_manufacturer(self, df,  top_3_manufacturers,):
+        for manufacturer in top_3_manufacturers.index:
+            top_5_handsets = df[df['Handset Manufacturer'] == manufacturer]['Handset Type'].value_counts().head(5)
+            print(f"Top 5 handsets for {manufacturer}:")
+            print(top_5_handsets)
+
+
+    def user_behavior_analysis(self,df):
+        # Aggregating per user (assuming 'MSISDN/Number' as user identifier)
+        user_behavior = df.groupby('MSISDN/Number').agg({
+            'Bearer Id': 'count',   # Number of xDR sessions
+            'Dur. (ms)': 'sum',     # Total session duration
+            'Total DL (Bytes)': 'sum', # Total download data
+            'Total UL (Bytes)': 'sum', # Total upload data
+            'Social Media DL (Bytes)': 'sum',
+            'Social Media UL (Bytes)': 'sum',
+            'Google DL (Bytes)': 'sum',
+            'Google UL (Bytes)': 'sum',
+            'Email DL (Bytes)': 'sum',
+            'Email UL (Bytes)': 'sum',
+            'Youtube DL (Bytes)': 'sum',
+            'Youtube UL (Bytes)': 'sum',
+            'Netflix DL (Bytes)': 'sum',
+            'Netflix UL (Bytes)': 'sum',
+            'Gaming DL (Bytes)': 'sum',
+            'Gaming UL (Bytes)': 'sum',
+            'Other DL (Bytes)': 'sum',
+            'Other UL (Bytes)': 'sum'
+        }).reset_index()
+
+        # Creating total data volume per application column
+        user_behavior['Total Data (Bytes)'] = user_behavior['Total DL (Bytes)'] + user_behavior['Total UL (Bytes)']
+        return user_behavior
+
+
+
+
     def handleMissing(self, df):
         # Handle missing data
         # Drop columns with a large amount of missing data (> 60% missing values)
         threshold = len(df) * 0.6
         df_clean= df.dropna(thresh=threshold, axis=1)
-        print("The missing____---",df_clean.shape)
         df_object=df_clean.select_dtypes(include=["object"])
         # Handling missing values in object data by replacing with a placeholder
         df_object=df_object.fillna("Unknown")
@@ -42,10 +92,20 @@ class UserAnalysis:
         # Impute missing values for remaining columns using median for numerical columns
         df_non_object.fillna(df_non_object.median(), inplace=True)
 
+        numeric_cols=df_non_object.columns
+
         df_cleaned=pd.concat([df_object, df_non_object], axis=1)
 
         # Drop rows with any remaining missing values in key columns
         df_cleaned.dropna(subset=['Bearer Id', 'IMSI', 'MSISDN/Number'], inplace=True)
+
+        # Fill missing values with mean
+
+        # Example: Handling outliers using z-score
+        # numeric_cols = df.select_dtypes(include=[float, int]).columns
+        z_scores = np.abs(zscore(df_cleaned[numeric_cols]))
+        df_cleaned = df_cleaned[(z_scores < 3).all(axis=1)]  # Keeping rows where z-scores are less than 3
+
 
         return df_cleaned
     
@@ -69,6 +129,8 @@ class UserAnalysis:
         df.drop(columns=['Start', 'End', 'Start ms', 'End ms'], inplace=True)
 
         return df
+    
+
     
 
     def distribution_of_sessionDuration(self, df):
@@ -101,6 +163,21 @@ class UserAnalysis:
         plt.title('Boxplot of Avg RTT DL (ms)')
         plt.show()
     
+    def user_segementation_basedOn_handset(self, df, top_10_handsets):
+        # Segment users based on handset type
+        user_segments =df.groupby(['Handset Type', 'Handset Manufacturer']).agg({
+            # 'xDR_sessions': 'sum',
+            'Session_Duration': 'mean',
+            'Total DL (Bytes)': 'sum',
+            'Total UL (Bytes)': 'sum'
+        }).reset_index()
+
+        print("User Segments:\n", user_segments)
+
+        # Profile the top segments
+        top_segments = user_segments[user_segments['Handset Type'].isin(top_10_handsets.index)]
+        print("Top User Segments Profile:\n", top_segments)
+
 
     def user_segementation(self, df):
         # Selecting key features for clustering
