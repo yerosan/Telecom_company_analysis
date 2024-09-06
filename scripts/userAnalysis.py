@@ -151,7 +151,7 @@ class UserAnalysis:
         # Scatter plot between total data volume and session duration
 
         user_behavior= user_behavior.rename(columns={'Bearer Id': 'Session Frequency', 'Total Data (Bytes)': 'Total Data Volume (Bytes)', 'Dur. (ms)':'Total Duration (ms)'})
-        
+
         sns.scatterplot(x='Total Duration (ms)', y='Total Data Volume (Bytes)', data=user_behavior)
         plt.title('Total Duration vs Total Data Volume')
         plt.show()
@@ -199,6 +199,7 @@ class UserAnalysis:
 
         # Explained variance ratio (how much info we retained)
         print(pca.explained_variance_ratio_)
+        return pca_result
 
     
     def outlier_detection(self,df):
