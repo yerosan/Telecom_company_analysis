@@ -153,8 +153,8 @@ class UserEngagement:
     
 
 
-
-    def app_traffic(self,df):
+    def app_traffic(self, df):
+        # Aggregating total download and upload traffic per application
         app_traffic = df.groupby('MSISDN/Number').agg({
             'Social Media DL (Bytes)': 'sum', 'Social Media UL (Bytes)': 'sum',
             'Google DL (Bytes)': 'sum', 'Google UL (Bytes)': 'sum',
@@ -169,8 +169,32 @@ class UserEngagement:
         app_traffic['Total Social Media Traffic'] = app_traffic['Social Media DL (Bytes)'] + app_traffic['Social Media UL (Bytes)']
         app_traffic['Total Google Traffic'] = app_traffic['Google DL (Bytes)'] + app_traffic['Google UL (Bytes)']
         app_traffic['Total Youtube Traffic'] = app_traffic['Youtube DL (Bytes)'] + app_traffic['Youtube UL (Bytes)']
+        app_traffic['Total Netflix Traffic'] = app_traffic['Netflix DL (Bytes)'] + app_traffic['Netflix UL (Bytes)']
+        app_traffic['Total Gaming Traffic'] = app_traffic['Gaming DL (Bytes)'] + app_traffic['Gaming UL (Bytes)']
+        app_traffic['Total Other Traffic'] = app_traffic['Other DL (Bytes)'] + app_traffic['Other UL (Bytes)']
+
+        # Calculate total traffic for visualization purposes
+        total_traffic = {
+            'Social Media': app_traffic['Total Social Media Traffic'].sum(),
+            'Google': app_traffic['Total Google Traffic'].sum(),
+            'YouTube': app_traffic['Total Youtube Traffic'].sum(),
+            'Netflix': app_traffic['Total Netflix Traffic'].sum(),
+            'Gaming': app_traffic['Total Gaming Traffic'].sum(),
+            'Other': app_traffic['Total Other Traffic'].sum()
+        }
+        
+        # Visualization: Bar Chart of Total Traffic per Application
+        plt.figure(figsize=(10, 6))
+        plt.bar(total_traffic.keys(), total_traffic.values(), color=['blue', 'orange', 'green', 'red', 'purple', 'brown'])
+        plt.title('Total Traffic per Application')
+        plt.xlabel('Application')
+        plt.ylabel('Total Traffic (Bytes)')
+        plt.xticks(rotation=45)
+        plt.tight_layout()
+        plt.show()
 
         return app_traffic
+
     
     def top_10_mostEngage_User_PerApplication(self, app_traffic):
         top_10_social_media = app_traffic[['MSISDN/Number', 'Total Social Media Traffic']].sort_values(by='Total Social Media Traffic', ascending=False).head(10)
