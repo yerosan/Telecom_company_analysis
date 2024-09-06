@@ -8,6 +8,9 @@ import seaborn as sns
 
 from sklearn.cluster import KMeans
 
+from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
+
 from scipy.stats import zscore
 
 # db=DataBaseConnection()
@@ -55,20 +58,6 @@ class UserAnalysis:
             'Dur. (ms)': 'sum',     # Total session duration
             'Total DL (Bytes)': 'sum', # Total download data
             'Total UL (Bytes)': 'sum', # Total upload data
-            'Social Media DL (Bytes)': 'sum',
-            'Social Media UL (Bytes)': 'sum',
-            'Google DL (Bytes)': 'sum',
-            'Google UL (Bytes)': 'sum',
-            'Email DL (Bytes)': 'sum',
-            'Email UL (Bytes)': 'sum',
-            'Youtube DL (Bytes)': 'sum',
-            'Youtube UL (Bytes)': 'sum',
-            'Netflix DL (Bytes)': 'sum',
-            'Netflix UL (Bytes)': 'sum',
-            'Gaming DL (Bytes)': 'sum',
-            'Gaming UL (Bytes)': 'sum',
-            'Other DL (Bytes)': 'sum',
-            'Other UL (Bytes)': 'sum'
         }).reset_index()
 
         # Creating total data volume per application column
@@ -99,9 +88,7 @@ class UserAnalysis:
         # Drop rows with any remaining missing values in key columns
         df_cleaned.dropna(subset=['Bearer Id', 'IMSI', 'MSISDN/Number'], inplace=True)
 
-        # Fill missing values with mean
-
-        # Example: Handling outliers using z-score
+        # Handling outliers using z-score
         # numeric_cols = df.select_dtypes(include=[float, int]).columns
         z_scores = np.abs(zscore(df_cleaned[numeric_cols]))
         df_cleaned = df_cleaned[(z_scores < 3).all(axis=1)]  # Keeping rows where z-scores are less than 3
@@ -131,6 +118,59 @@ class UserAnalysis:
         return df
     
 
+
+    def analyzing_basic_metrics(self, user_behavior):
+        basic_stats = user_behavior.describe()
+        print(basic_stats)
+
+
+    def univariante_analysis(self, user_behavior):
+        # Renaming specific columns
+        user_behavior= user_behavior.rename(columns={'Bearer Id': 'Session Frequency', 'Total Data (Bytes)': 'Total Data Volume (Bytes)', 'Dur. (ms)':'Total Duration (ms)'})
+
+        dispersion_params = user_behavior[['Session Frequency', 'Total Data Volume (Bytes)', 'Total Duration (ms)']].std()
+        print("Dispersion Parameters:\n", dispersion_params)
+
+
+    def graphic_univariant_analysis(self, user_behavior):
+
+        # Histogram of total data volume
+
+        user_behavior= user_behavior.rename(columns={'Bearer Id': 'Session Frequency', 'Total Data (Bytes)': 'Total Data Volume (Bytes)', 'Dur. (ms)':'Total Duration (ms)'})
+
+        sns.histplot(user_behavior['Total Data Volume (Bytes)'], kde=True)
+        plt.title('Total Data Volume Distribution')
+        plt.show()
+
+        # Boxplot for session frequency
+        sns.boxplot(user_behavior['Session Frequency'])
+        plt.title('Session Frequency Distribution')
+        plt.show()
+
+    def bivariante_analysis(self, user_behavior):
+        # Scatter plot between total data volume and session duration
+
+        user_behavior= user_behavior.rename(columns={'Bearer Id': 'Session Frequency', 'Total Data (Bytes)': 'Total Data Volume (Bytes)', 'Dur. (ms)':'Total Duration (ms)'})
+
+        sns.scatterplot(x='Total Duration (ms)', y='Total Data Volume (Bytes)', data=user_behavior)
+        plt.title('Total Duration vs Total Data Volume')
+        plt.show()
+
+    def correlation_analysis(self, user_behavior):
+        # Correlation matrix for specific apps data
+        correlation_matrix = user_behavior[['Social Media DL (Bytes)', 'Google DL (Bytes)', 
+                                            'Email DL (Bytes)', 'Youtube DL (Bytes)', 
+                                            'Netflix DL (Bytes)', 'Gaming DL (Bytes)', 
+                                            'Other DL (Bytes)']].corr()
+
+        print(correlation_matrix)
+
+
+
+
+
+    
+
     
 
     def distribution_of_sessionDuration(self, df):
@@ -141,14 +181,26 @@ class UserAnalysis:
         plt.ylabel('Frequency')
         plt.show()
     
+    def dimensionalReduction_using_pca(self, user_behavior):
 
-    def correlation_matrix(self, df):
-        # Plot the correlation matrix
-        plt.figure(figsize=(12, 8))
-        corr_matrix = df.corr()
-        sns.heatmap(corr_matrix, annot=True, cmap='coolwarm', fmt='.2f', linewidths=0.5)
-        plt.title('Correlation Matrix of Numerical Features')
+        # Standardize the data before PCA
+        X = user_behavior[['Social Media DL (Bytes)', 'Google DL (Bytes)', 'Email DL (Bytes)', 'Youtube DL (Bytes)', 
+                        'Netflix DL (Bytes)', 'Gaming DL (Bytes)', 'Other DL (Bytes)']]
+        X_scaled = StandardScaler().fit_transform(X)
+
+        # Applying PCA
+        pca = PCA(n_components=2)  # Reduce to 2 dimensions
+        pca_result = pca.fit_transform(X_scaled)
+
+        # Plot PCA result
+        plt.scatter(pca_result[:, 0], pca_result[:, 1])
+        plt.title('PCA Dimensionality Reduction')
         plt.show()
+
+        # Explained variance ratio (how much info we retained)
+        print(pca.explained_variance_ratio_)
+        return pca_result
+
     
     def outlier_detection(self,df):
         # Visualize outliers using boxplots for key metrics
