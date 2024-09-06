@@ -35,11 +35,29 @@ class UserAnalysis:
 
     def top_10_handset(self, df):
         top_10_handsets = df['Handset Type'].value_counts().head(10)
+        # Plotting the bar chart
+        plt.figure(figsize=(10, 6))
+        top_10_handsets.plot(kind='bar', color='skyblue')
+        plt.title('Top 10 Handsets Used by Customers')
+        plt.xlabel('Handset Type')
+        plt.ylabel('Frequency')
+        plt.xticks(rotation=45, ha='right')
+        plt.tight_layout()
+        plt.show()
         print ("top_10_handsets", top_10_handsets)
         return top_10_handsets
     
     def top_3_manufacturers(self, df):
         top_3_manufacturers = df['Handset Manufacturer'].value_counts().head(3)
+        # Plotting the bar chart
+        plt.figure(figsize=(8, 6))
+        top_3_manufacturers.plot(kind='bar', color='lightgreen')
+        plt.title('Top 3 Handset Manufacturers')
+        plt.xlabel('Handset Manufacturer')
+        plt.ylabel('Frequency')
+        plt.xticks(rotation=45, ha='right')
+        plt.tight_layout()
+        plt.show()
         print("top_3_manufacturers",top_3_manufacturers)
         
         return top_3_manufacturers
@@ -47,6 +65,15 @@ class UserAnalysis:
     def top_5HandsetPer_top3_manufacturer(self, df,  top_3_manufacturers,):
         for manufacturer in top_3_manufacturers.index:
             top_5_handsets = df[df['Handset Manufacturer'] == manufacturer]['Handset Type'].value_counts().head(5)
+            # Plotting the bar chart for each manufacturer
+            plt.figure(figsize=(8, 6))
+            top_5_handsets.plot(kind='bar', color='lightcoral')
+            plt.title(f'Top 5 Handsets for {manufacturer}')
+            plt.xlabel('Handset Type')
+            plt.ylabel('Frequency')
+            plt.xticks(rotation=45, ha='right')
+            plt.tight_layout()
+            plt.show()
             print(f"Top 5 handsets for {manufacturer}:")
             print(top_5_handsets)
 
