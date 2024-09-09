@@ -98,7 +98,10 @@ class UserAnalysis:
         # Handle missing data
         # Drop columns with a large amount of missing data (> 60% missing values)
         threshold = len(df) * 0.6
-        df_clean= df.dropna(thresh=threshold, axis=1)
+        exceptions = ['TCP DL Retrans. Vol (Bytes)','TCP UL Retrans. Vol (Bytes)']
+
+        # Apply dropna while excluding the specified columns
+        df_clean = df.dropna(thresh=threshold, axis=1).join(df[exceptions])
         df_object=df_clean.select_dtypes(include=["object"])
         # Handling missing values in object data by replacing with a placeholder
         df_object=df_object.fillna("Unknown")
@@ -106,7 +109,7 @@ class UserAnalysis:
         df_non_object = df_clean.select_dtypes(exclude=['object'])
 
         # Impute missing values for remaining columns using median for numerical columns
-        df_non_object.fillna(df_non_object.median(), inplace=True)
+        df_non_object.fillna(df_non_object.mean(), inplace=True)
 
         numeric_cols=df_non_object.columns
 
