@@ -6,8 +6,9 @@ import seaborn as sns
 
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.cluster import KMeans
-from sklearn.cluster import KMeans
 from sklearn.preprocessing import StandardScaler
+
+from mpl_toolkits.mplot3d import Axes3D
 
 class ExperienceAnalytics:
     def __init__(self, df):
@@ -130,7 +131,7 @@ class ExperienceAnalytics:
         print(cluster_summary)
 
         # Step 5: Plot the Clusters using a 3D Scatter Plot to visualize the clusters
-        from mpl_toolkits.mplot3d import Axes3D
+       
 
         fig = plt.figure(figsize=(10, 7))
         ax = fig.add_subplot(111, projection='3d')
@@ -171,5 +172,8 @@ class ExperienceAnalytics:
         plt.xlabel('Avg TCP Retransmission')
         plt.ylabel('Avg Throughput')
         plt.show()
+
+
+        return features_scaled, kmeans, 
 
 
