@@ -30,7 +30,7 @@ class DataBaseConnection:
                 password=self.password,
                 port=self.port
             )
-            print("Connection to PostgreSQL successful")
+            print("Connection to database successful")
         except OperationalError as e:
             print(f"The error '{e}' occurred")
         return connection
@@ -48,7 +48,7 @@ class DataBaseConnection:
         try:
             cursor.execute(query, params)
             connection.commit()
-            print("Query executed successfully")
+            # print("Query executed successfully")
         except OperationalError as e:
             print(f"The error '{e}' occurred")
         finally:
@@ -83,4 +83,4 @@ class DataBaseConnection:
         """
         if connection:
             connection.close()
-            print("Connection to PostgreSQL closed")
+            print("Connection to database closed")
